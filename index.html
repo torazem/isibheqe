@@ -52,7 +52,7 @@
             }
             
             function simpleKeyAction(text) {
-                var tokens = zuluTranscriber.tokenize(text);
+                var tokens = zuluTranscriber.tokenize(text.toLowerCase());
                 var keys = tokens.map((t) => {
                     return zuluTranscriber.transcribeToken(t);
                 });

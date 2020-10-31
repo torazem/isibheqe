@@ -5,9 +5,10 @@
 		<script type="text/javascript" src="lib/jquery-2.1.4.js" ></script>
 		<script type="text/javascript" src="lib/isibheqe-glyphs.js" ></script>
 		<script type="text/javascript" src="lib/isibheqe-rendering.js" ></script>
-		<script type="text/javascript" src="lib/isibheqe-zulu-transcriber.js" ></script>
+		<script type="text/javascript" src="lib/isibheqe-transcriber.js" ></script>
 		<script type="text/javascript" src="lib/key-mappings.js" ></script>
 		<script type="text/javascript" src="lib/zulu-mappings.js" ></script>
+		<script type="text/javascript" src="lib/shona-mappings.js" ></script>
 		<script type="text/javascript">
 
 		var UNIT = 3;
@@ -18,7 +19,9 @@
 
 		$(function() {
 			var screenContext = new Context(UNIT, canvasWidth, canvasHeight);
-            var zuluTranscriber = new ZuluTranscriber(zuluSimpleBases, zuluSimpleModifiers);
+            var zuluTranscriber = new Transcriber(zuluMappings);
+            var shonaTranscriber = new Transcriber(shonaMappings);
+            var transcriber = shonaTranscriber;
 
 			var refresh = function(context) {
 				$("#isibheqe-frame").children().replaceWith(context.render());
@@ -52,9 +55,9 @@
             }
             
             function simpleKeyAction(text) {
-                var tokens = zuluTranscriber.tokenize(text.toLowerCase());
+                var tokens = transcriber.tokenize(text.toLowerCase());
                 var keys = tokens.map((t) => {
-                    return zuluTranscriber.transcribeToken(t);
+                    return transcriber.transcribeToken(t);
                 });
                 keys = keys.flat(3);
                 screenContext.reset();
@@ -74,6 +77,16 @@
 					return;
                 }
                 defaultKeyAction(event);
+			});
+
+			$("#language-zulu").click(function(event){
+                transcriber = zuluTranscriber;
+                simpleKeyAction($("#isibheqe-simple-serialization").val());
+			});
+
+			$("#language-shona").click(function(event){
+                transcriber = shonaTranscriber;
+                simpleKeyAction($("#isibheqe-simple-serialization").val());
 			});
 
 			$("#isibheqe-sync").click(function(event){
@@ -152,6 +165,12 @@
 			<div id="isibheqe-simple-text-frame">
 				<p>
 					<textarea id="isibheqe-simple-serialization" width="240"></textarea>
+				</p>
+				<p>
+					<button id="language-zulu"> Zulu </button>
+				</p>
+				<p>
+					<button id="language-shona"> Shona </button>
 				</p>
 			</div>
 

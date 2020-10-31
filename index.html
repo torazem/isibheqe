@@ -5,7 +5,9 @@
 		<script type="text/javascript" src="lib/jquery-2.1.4.js" ></script>
 		<script type="text/javascript" src="lib/isibheqe-glyphs.js" ></script>
 		<script type="text/javascript" src="lib/isibheqe-rendering.js" ></script>
+		<script type="text/javascript" src="lib/isibheqe-zulu-transcriber.js" ></script>
 		<script type="text/javascript" src="lib/key-mappings.js" ></script>
+		<script type="text/javascript" src="lib/zulu-mappings.js" ></script>
 		<script type="text/javascript">
 
 		var UNIT = 3;
@@ -16,17 +18,14 @@
 
 		$(function() {
 			var screenContext = new Context(UNIT, canvasWidth, canvasHeight);
+            var zuluTranscriber = new ZuluTranscriber(zuluSimpleBases, zuluSimpleModifiers);
 
 			var refresh = function(context) {
 				$("#isibheqe-frame").children().replaceWith(context.render());
 				$("#isibheqe-serialization").val(context.serialize());
-			};
-
-			$(document).keypress(function(event){
-				if($("#isibheqe-serialization").is(":focus")){
-					return;
-				}
-				var key;
+            };
+            
+            function defaultKeyAction(event) {
 				if(event.ctrlKey && event.which === 26) {
 					screenContext.undo();
 					refresh(screenContext);
@@ -50,6 +49,31 @@
 				}
 				screenContext.addLetter(key);
 				refresh(screenContext);
+            }
+            
+            function simpleKeyAction(text) {
+                var tokens = zuluTranscriber.tokenize(text);
+                var keys = tokens.map((t) => {
+                    return zuluTranscriber.transcribeToken(t);
+                });
+                keys = keys.flat(3);
+                screenContext.reset();
+                keys.forEach(ele => screenContext.addLetter(ele))
+				refresh(screenContext);
+            }
+
+			$("#isibheqe-simple-serialization").keyup(function(event){
+                simpleKeyAction($(this).val());
+			});
+
+			$(document).keypress(function(event){
+				if($("#isibheqe-serialization").is(":focus")){
+					return;
+				}
+				if($("#isibheqe-simple-serialization").is(":focus")){
+					return;
+                }
+                defaultKeyAction(event);
 			});
 
 			$("#isibheqe-sync").click(function(event){
@@ -79,40 +103,7 @@
 				$("#isibheqe-download-placeholder").html(link);
 			});
 
-			
-
 			var factory = new GlyphFactory(3);
-
-			/* Generate keyboard dynamicaly
-			
-			var vowelKeyboard = $("#isibheqe-vowels");
-			for (var i = 0; i < VOWELS.length; i++) {
-				var vowel = VOWELS[i];
-				var key = document.createElement("div");
-				key.className = "isibheqe-letter";
-				$(key).attr("x-data-isibheqe", vowel);
-				vowelKeyboard.append(key);
-			}
-
-			var consonantKeyboard = $("#isibheqe-consonants");
-			for (var i = 0; i < CONSONANTS.length; i++) {
-				var consonant = CONSONANTS[i];
-				var key = document.createElement("div");
-				key.className = "isibheqe-letter";
-				$(key).attr("x-data-isibheqe", consonant);
-				consonantKeyboard.append(key);
-			}
-
-			var syllabicConsonantsKeyboard = $("#isibheqe-syllabic-consonants");
-			for (var i = 0; i < SYLLABIC_CONSONANTS.length; i++) {
-				var consonant = SYLLABIC_CONSONANTS[i];
-				var key = document.createElement("div");
-				key.className = "isibheqe-letter";
-				$(key).attr("x-data-isibheqe", consonant);
-				vowelKeyboard.append(key);
-			}
-			
-			*/
 
 			$("div.isibheqe-letter").each(function(index, button){
 				var canvas = document.createElement("canvas");
@@ -156,6 +147,12 @@
 		<div class="isibheqe-display">
 			<div id="isibheqe-frame" class="isibheqe-frame">
 				<canvas id="isibheqe-canvas" width="800" height="400"></canvas>
+			</div>
+
+			<div id="isibheqe-simple-text-frame">
+				<p>
+					<textarea id="isibheqe-simple-serialization" width="240"></textarea>
+				</p>
 			</div>
 
 			<div id="isibheqe-text-frame">
